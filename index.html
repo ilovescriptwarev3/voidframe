@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Voidframe — AI agents on your machine</title>
+<meta name="description" content="Code, chat, deploy and orchestrate AI agents — all on your hardware. No cloud lock-in."/>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#0c0c0b;--bg2:#141413;--bg3:#1a1a18;--surface:#1e1e1c;
+  --border:#252523;--border2:#313130;--border3:#3d3d3a;
+  --text:#eceae4;--text2:#9a9890;--text3:#5e5e5a;
+  --accent:#7fff8c;--accent2:#5ddb6c;--accent-dim:rgba(127,255,140,.08);
+  --warn:#f5a623;--red:#ff5f57;
+  --mono:"IBM Plex Mono",Consolas,"Courier New",monospace;
+  --sans:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:6px;--r2:10px;--r3:14px;
+  --sb:236px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:auto}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font:inherit;color:inherit}
+::selection{background:var(--accent);color:#050505}
+h1,h2,h3{font-weight:300;letter-spacing:-.02em;line-height:1.1}
+h1 strong,h2 strong{font-weight:600}
+.mono{font-family:var(--mono)}
+.muted{color:var(--text2)}
+.dim{color:var(--text3)}
+.small{font-size:12px}
+.tiny{font-size:10.5px;font-family:var(--mono);letter-spacing:.06em}
+.row{display:flex;align-items:center;gap:10px}
+.row.wrap{flex-wrap:wrap}
+.spread{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.grow{flex:1;min-width:0}
+.hide{display:none!important}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:var(--r);border:1px solid var(--border2);background:transparent;color:var(--text2);padding:8px 14px;font-size:12.5px;font-family:var(--mono);cursor:pointer;transition:color .15s,border-color .15s,background .15s,transform .1s;white-space:nowrap}
+.btn:hover{color:var(--text);border-color:var(--border3);background:var(--bg2)}
+.btn:active{transform:translateY(1px)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#050505;font-weight:600}
+.btn.primary:hover{background:var(--accent2);border-color:var(--accent2)}
+.btn.danger{color:var(--red);border-color:rgba(255,95,87,.3)}
+.btn.danger:hover{background:rgba(255,95,87,.08);color:var(--red)}
+.btn.wide{width:100%}
+.btn.sm{padding:5px 10px;font-size:11px}
+
+/* inputs */
+label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+input,select,textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:9px 12px;font-size:13.5px;color:var(--text);transition:border-color .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+input::placeholder,textarea::placeholder{color:var(--text3)}
+textarea{resize:vertical;min-height:90px;font-family:var(--sans)}
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+
+/* shell */
+.shell{display:flex;min-height:100%}
+.sidebar{position:fixed;inset:0 auto 0 0;width:var(--sb);background:var(--bg);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:18px 14px;overflow:auto;z-index:20}
+.brand{font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:.04em;display:flex;align-items:center;gap:2px;padding:0 8px 18px}
+.brand em{color:var(--accent);font-style:normal}
+.brand .br{color:var(--text3)}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);color:var(--text2);font-size:13px;transition:background .15s,color .15s}
+.nav a:hover{background:var(--bg2);color:var(--text)}
+.nav a.active{background:var(--accent-dim);color:var(--accent);font-weight:500}
+.nav .ico{width:16px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--text3)}
+.nav a.active .ico{color:var(--accent)}
+.nav-sep{margin:14px 8px 8px;font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--text3)}
+.side-foot{margin-top:auto;padding-top:16px;border-top:1px solid var(--border)}
+.who{display:flex;align-items:center;gap:10px;padding:6px 8px}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:var(--accent);overflow:hidden;flex-shrink:0}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.who .meta{min-width:0}
+.who .mail{font-size:11.5px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who .plan{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.08em}
+
+.main{margin-left:var(--sb);flex:1;min-width:0;padding:28px 32px 56px}
+.topbar{display:none}
+.page-h{margin-bottom:22px}
+.page-h h1{font-size:26px}
+.page-h p{color:var(--text2);font-size:13.5px;margin-top:4px}
+
+/* cards */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:18px 20px}
+.card+.card{margin-top:14px}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.card-h h2{font-size:14px;font-weight:600;letter-spacing:-.005em}
+.card-h .sub{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.stat{padding:14px 16px}
+.stat .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
+.stat .v{font-family:var(--mono);font-size:22px;font-weight:600;margin-top:4px}
+.stat .v small{font-size:11px;color:var(--text3);font-weight:400}
+
+/* service tiles */
+.svc{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg3);transition:border-color .15s}
+.svc:hover{border-color:var(--border3)}
+.svc .nm{font-family:var(--mono);font-size:12px;font-weight:600}
+.svc .pt{font-family:var(--mono);font-size:9.5px;color:var(--text3)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0}
+.dot.on{background:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.dot.off{background:var(--red);box-shadow:0 0 0 3px rgba(255,95,87,.1)}
+.badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;padding:2px 8px;border-radius:20px;border:1px solid var(--border2);color:var(--text2);text-transform:uppercase}
+.badge.on{color:var(--accent);border-color:rgba(127,255,140,.3);background:var(--accent-dim)}
+.badge.off{color:var(--red);border-color:rgba(255,95,87,.3)}
+.badge.warn{color:var(--warn);border-color:rgba(245,166,35,.3)}
+
+/* tables + lists */
+.list{display:flex;flex-direction:column}
+.item{display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+.item:last-child{border-bottom:none}
+.item:hover{background:var(--bg3)}
+.item .t{font-size:13px;font-weight:500}
+.item .s{font-size:11.5px;color:var(--text3)}
+.item .right{margin-left:auto;text-align:right}
+.logline{display:grid;grid-template-columns:76px 72px 1fr;gap:10px;font-family:var(--mono);font-size:11.5px;padding:4px 0;border-bottom:1px solid rgba(37,37,35,.6);white-space:nowrap;overflow:hidden}
+.logline:last-child{border-bottom:none}
+.logline .ts{color:var(--text3)}
+.logline .sv{color:var(--accent)}
+.logline .ms{color:var(--text2);overflow:hidden;text-overflow:ellipsis}
+.empty{padding:26px 8px;text-align:center;color:var(--text3);font-size:13px}
+.err{margin-top:12px;padding:10px 12px;border:1px solid rgba(255,95,87,.3);background:rgba(255,95,87,.06);border-radius:var(--r);color:var(--red);font-size:12.5px}
+.ok{margin-top:12px;padding:10px 12px;border:1px solid rgba(127,255,140,.25);background:var(--accent-dim);border-radius:var(--r);color:var(--accent);font-size:12.5px}
+pre{font-family:var(--mono);font-size:11.5px;background:#0a0a09;border:1px solid var(--border);border-radius:var(--r);padding:12px;overflow:auto;max-height:320px;color:var(--text2)}
+hr.sep{border:none;border-top:1px solid var(--border);margin:14px 0}
+.pill{font-family:var(--mono);font-size:9.5px;padding:2px 7px;border-radius:20px;border:1px solid var(--border2);color:var(--text3)}
+
+/* chat */
+.thread{display:flex;flex-direction:column;gap:12px;min-height:180px;max-height:52vh;overflow:auto;padding:4px 2px 8px}
+.msg{max-width:80%;padding:10px 14px;border-radius:var(--r2);font-size:13.5px;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+.msg.user{align-self:flex-end;background:var(--accent-dim);border:1px solid rgba(127,255,140,.22);color:var(--text)}
+.msg.agent{align-self:flex-start;background:var(--bg3);border:1px solid var(--border2)}
+.msg.err{align-self:flex-start;background:rgba(255,95,87,.06);border:1px solid rgba(255,95,87,.3);color:var(--red)}
+.msg .who2{display:block;font-family:var(--mono);font-size:9.5px;color:var(--text3);margin-bottom:4px;letter-spacing:.06em}
+.composer{display:flex;gap:10px;align-items:flex-end;margin-top:12px}
+.composer textarea{min-height:52px;max-height:160px}
+
+/* auth */
+.auth-wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:40px 20px}
+.auth{width:100%;max-width:400px}
+.auth .logo{font-family:var(--mono);font-size:17px;font-weight:700;letter-spacing:.04em;text-align:center;margin-bottom:6px}
+.auth .logo em{color:var(--accent);font-style:normal}
+.auth .tag{text-align:center;color:var(--text3);font-size:12px;margin-bottom:24px}
+.auth .card{padding:24px}
+.auth h2{font-size:19px;font-weight:600;margin-bottom:4px}
+.auth .lead{color:var(--text2);font-size:12.5px;margin-bottom:18px}
+.or{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--text3);font-family:var(--mono);font-size:10px;letter-spacing:.1em}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--border)}
+.auth .foot{text-align:center;font-size:12px;color:var(--text3);margin-top:16px}
+.auth a.link{color:var(--accent)}
+.gh{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:9px;border:1px solid var(--border2);border-radius:var(--r);background:var(--bg3);font-size:13px;cursor:pointer;transition:border-color .15s}
+.gh:hover{border-color:var(--border3)}
+.gh svg{width:16px;height:16px;fill:currentColor}
+
+/* landing */
+.land{max-width:1080px;margin:0 auto;padding:26px 28px 60px}
+.land nav{display:flex;align-items:center;justify-content:space-between;padding:6px 0 40px}
+.land .hero{padding:40px 0 34px;max-width:660px}
+.land .badge-live{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--accent);border:1px solid rgba(127,255,140,.25);background:var(--accent-dim);padding:5px 12px;border-radius:20px;margin-bottom:20px}
+.land h1{font-size:clamp(34px,5rem,64px);font-size:clamp(34px,5vw,64px)}
+.land .sub{color:var(--text2);font-size:15.5px;font-weight:300;max-width:500px;margin:16px 0 26px}
+.land .strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:44px}
+
+@media(max-width:1000px){
+  .sidebar{position:static;width:auto;inset:auto;border-right:none;border-bottom:1px solid var(--border);flex-direction:row;align-items:center;gap:8px;padding:10px 14px;overflow-x:auto}
+  .brand{padding:0 10px 0 0}
+  .nav{flex-direction:row;gap:4px}
+  .nav a{padding:7px 10px;white-space:nowrap}
+  .nav .lbl{display:none}
+  .nav-sep,.side-foot{display:none}
+  .main{margin-left:0;padding:22px 18px 48px}
+  .g2{grid-template-columns:1fr}
+  .thread{max-height:none}
+}
+@media(max-width:560px){
+  .land{padding:18px 16px 40px}
+  .msg{max-width:92%}
+  .logline{grid-template-columns:64px 1fr}
+  .logline .sv{display:none}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(function(){
+'use strict';
+
+var state = { user: null, providers: { password: true, github: false, github_token: true }, status: null, models: null, chat: [], selectedMission: null, toast: null };
+var app = document.getElementById('app');
+
+// ── helpers ────────────────────────────────────────────────
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+  });
+}
+function ago(iso){
+  if(!iso) return '';
+  var d = Date.now() - new Date(iso).getTime();
+  if(isNaN(d)) return '';
+  var s = Math.max(0, Math.round(d/1000));
+  if(s < 60) return s + 's ago';
+  if(s < 3600) return Math.round(s/60) + 'm ago';
+  if(s < 86400) return Math.round(s/3600) + 'h ago';
+  return Math.round(s/86400) + 'd ago';
+}
+function num(n){ return (n == null ? 0 : Number(n)).toLocaleString(); }
+
+async function req(url, opts){
+  opts = opts || {};
+  var res = await fetch(url, {
+    method: opts.method || 'GET',
+    headers: opts.body ? {'content-type':'application/json'} : undefined,
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+    credentials: 'same-origin'
+  });
+  var text = await res.text();
+  var body = null;
+  try { body = text ? JSON.parse(text) : null; } catch(e) { body = { raw: text }; }
+  if(!res.ok){
+    var msg = (body && body.error && body.error.message) || ('Request failed (' + res.status + ')');
+    var err = new Error(msg);
+    err.status = res.status;
+    err.code = body && body.error && body.error.code;
+    throw err;
+  }
+  return body;
+}
+var api = function(p, o){ return req('/api' + p, o); };
+var svc = function(name, p, o){ return req('/svc/' + name + p, o); };
+
+function toast(msg, kind){
+  state.toast = { msg: msg, kind: kind || 'ok' };
+  renderToast();
+  setTimeout(function(){ state.toast = null; renderToast(); }, 3200);
+}
+function renderToast(){
+  var el = document.getElementById('toast');
+  if(!state.toast){ if(el) el.remove(); return; }
+  if(!el){ el = document.createElement('div'); el.id = 'toast'; document.body.appendChild(el); }
+  el.className = 'toast ' + state.toast.kind;
+  el.textContent = state.toast.msg;
+  el.style.cssText = 'position:fixed;right:20px;bottom:20px;z-index:99;max-width:min(420px,80%);padding:11px 16px;border-radius:8px;font-size:12.5px;font-family:var(--mono);border:1px solid var(--border2);background:var(--bg3);color:var(--text);box-shadow:0 20px 40px -20px #000';
+  if(state.toast.kind === 'err'){ el.style.borderColor = 'rgba(255,95,87,.4)'; el.style.color = '#ff5f57'; }
+  if(state.toast.kind === 'ok'){ el.style.borderColor = 'rgba(127,255,140,.3)'; el.style.color = '#7fff8c'; }
+}
+
+// ── routes ─────────────────────────────────────────────────
+var NAV = [
+  { id:'overview', label:'Overview', ico:'◱' },
+  { id:'missions', label:'Missions', ico:'◎' },
+  { id:'chat',     label:'Chat',     ico:'◍' },
+  { id:'services', label:'Services', ico:'▤' },
+  { id:'vault',    label:'Search',   ico:'⌕' },
+  { id:'secrets',  label:'Secrets',  ico:'⚿' },
+  { id:'logs',     label:'Logs',     ico:'≡' },
+  { id:'account',  label:'Account',  ico:'◔' }
+];
+var PUBLIC = ['', 'signin', 'signup'];
+
+function parseHash(){
+  var h = location.hash.replace(/^#\/?/, '');
+  var q = '';
+  var qi = h.indexOf('?');
+  if(qi >= 0){ q = h.slice(qi + 1); h = h.slice(0, qi); }
+  return { route: h || 'landing', query: new URLSearchParams(q) };
+}
+
+function go(route){ location.hash = '#/' + route; }
+
+function shell(active, body){
+  var u = state.user || {};
+  var initials = (u.github && u.github.login ? u.github.login : (u.email || '?'))[0].toUpperCase();
+  var av = u.github && u.github.avatar_url
+    ? '<div class="avatar"><img alt="" src="' + esc(u.github.avatar_url) + '"/></div>'
+    : '<div class="avatar">' + esc(initials) + '</div>';
+  return '<div class="shell">' +
+    '<aside class="sidebar">' +
+      '<a class="brand" href="#/overview"><span class="br">[</span>void<em>frame</em><span class="br">]</span></a>' +
+      '<nav class="nav">' +
+        NAV.map(function(n){
+          return '<a href="#/' + n.id + '" class="' + (n.id === active ? 'active' : '') + '">' +
+            '<span class="ico">' + n.ico + '</span><span class="lbl">' + n.label + '</span></a>';
+        }).join('') +
+      '</nav>' +
+      '<div class="side-foot"><div class="who">' + av +
+        '<div class="meta grow"><div class="mail">' + esc(u.email || '') + '</div>' +
+        '<div class="plan">' + esc(u.plan || 'local') + (u.github ? ' · github:' + esc(u.github.login) : '') + '</div></div>' +
+      '</div></div>' +
+    '</aside>' +
+    '<main class="main">' + body + '</main>' +
+  '</div>';
+}
+
+// ── landing ────────────────────────────────────────────────
+function viewLanding(){
+  return '<div class="land">' +
+    '<nav>' +
+      '<a class="brand" href="#/" style="padding:0"><span class="br">[</span>void<em>frame</em><span class="br">]</span></a>' +
+      '<div class="row">' +
+        '<a class="btn" href="#/signin">Sign in</a>' +
+        '<a class="btn primary" href="#/signup">Create account</a>' +
+      '</div>' +
+    '</nav>' +
+    '<section class="hero">' +
+      '<div class="badge-live"><span class="dot on"></span>Self-hosted · 8 services · zero cloud lock-in</div>' +
+      '<h1>Code, chat, deploy.<br><strong>Agents on your <span style="color:var(--accent)">machine.</span></strong></h1>' +
+      '<p class="sub">Voidframe runs the whole agent platform on your hardware: missions, sandboxes, a knowledge vault, model routing and secrets — and you approve what runs.</p>' +
+      '<div class="row wrap">' +
+        '<a class="btn primary" href="#/signup">Create your account</a>' +
+        '<a class="btn" href="#/signin">Sign in</a>' +
+      '</div>' +
+    '</section>' +
+    '<section class="card" style="margin-top:8px">' +
+      '<div class="card-h"><h2>Live services</h2><span class="sub" id="land-status-note">checking…</span></div>' +
+      '<div class="grid g4" id="land-status"><div class="empty">Loading…</div></div>' +
+    '</section>' +
+  '</div>';
+}
+
+async function loadLandingStatus(){
+  var host = document.getElementById('land-status');
+  if(!host) return;
+  try {
+    var data = await req('/status');
+    state.status = data.services;
+    host.innerHTML = data.services.map(function(s){
+      return '<div class="svc"><span class="dot ' + (s.ok ? 'on' : 'off') + '"></span>' +
+        '<div class="grow"><div class="nm">' + esc(s.name) + '</div>' +
+        '<div class="pt">' + (s.ok ? s.ms + 'ms · v' + esc(s.version || '?') : 'offline') + '</div></div></div>';
+    }).join('');
+    var up = data.services.filter(function(s){ return s.ok; }).length;
+    var note = document.getElementById('land-status-note');
+    if(note) note.textContent = up + '/' + data.services.length + ' online';
+  } catch(e) {
+    host.innerHTML = '<div class="empty">Services are not running. Start them with <span class="mono">node scripts/dev-all.mjs</span>.</div>';
+  }
+}
+
+// ── auth views ─────────────────────────────────────────────
+function viewAuth(mode, query){
+  var isSignup = mode === 'signup';
+  var note = '';
+  var gh = query && query.get('github');
+  if(gh === 'config') note = '<div class="err">GitHub sign-in is not configured on this machine (set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET). You can still use a GitHub token below.</div>';
+  if(gh === 'state') note = '<div class="err">That sign-in link expired. Try again.</div>';
+  if(gh === 'denied') note = '<div class="err">GitHub sign-in was cancelled.</div>';
+  if(gh === 'failed') note = '<div class="err">GitHub sign-in failed. Try again, or use a token.</div>';
+  return '<div class="auth-wrap"><div class="auth">' +
+    '<div class="logo"><span style="color:var(--text3)">[</span>void<em>frame</em><span style="color:var(--text3)">]</span></div>' +
+    '<div class="tag">' + (isSignup ? 'Set up your own agent platform' : 'Welcome back') + '</div>' +
+    '<div class="card">' +
+      '<h2>' + (isSignup ? 'Create your account' : 'Sign in') + '</h2>' +
+      '<p class="lead">' + (isSignup ? 'Local account — nothing leaves this machine.' : 'Use your Voidframe account.') + '</p>' +
+      '<form id="auth-form" autocomplete="on">' +
+        '<div class="field"><label for="email">Email</label>' +
+          '<input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="username" required/></div>' +
+        '<div class="field"><label for="password">Password</label>' +
+          '<input id="password" name="password" type="password" placeholder="' + (isSignup ? 'at least 8 characters' : 'your password') + '" autocomplete="' + (isSignup ? 'new-password' : 'current-password') + '" required/></div>' +
+        '<button class="btn primary wide" type="submit" id="auth-submit">' + (isSignup ? 'Create account' : 'Sign in') + '</button>' +
+      '</form>' +
+      '<div id="auth-note">' + note + '</div>' +
+      '<div class="or">OR</div>' +
+      '<div class="row" style="flex-direction:column;gap:8px">' +
+        '<button class="gh" id="gh-oauth">' + ghIcon() + ' Continue with GitHub</button>' +
+        '<button class="gh" id="gh-token">' + ghIcon() + ' Use a GitHub token</button>' +
+      '</div>' +
+      '<div class="foot">' + (isSignup ? 'Already have an account? <a class="link" href="#/signin">Sign in</a>' : 'Need an account? <a class="link" href="#/signup">Create one</a>') + '</div>' +
+    '</div>' +
+  '</div></div>';
+}
+
+function ghIcon(){
+  return '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>';
+}
+
+async function doAuth(mode){
+  var form = document.getElementById('auth-form');
+  var note = document.getElementById('auth-note');
+  var btn = document.getElementById('auth-submit');
+  form.addEventListener('submit', async function(ev){
+    ev.preventDefault();
+    note.innerHTML = '';
+    btn.disabled = true;
+    try {
+      // The router hands us the page route ('signin' / 'signup'); the panel serves
+      // /auth/login and /auth/register. Map route -> endpoint here.
+      var endpoint = mode === 'signin' ? 'login' : (mode === 'signup' ? 'register' : mode);
+      var out = await req('/auth/' + endpoint, {
+        method: 'POST',
+        body: { email: form.email.value.trim(), password: form.password.value }
+      });
+      await boot(true);
+      go('overview');
+      toast('Signed in as ' + out.user.email);
+    } catch(err) {
+      note.innerHTML = '<div class="err">' + esc(err.message) + '</div>';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
+function bindAuthButtons(){
+  var oauth = document.getElementById('gh-oauth');
+  var token = document.getElementById('gh-token');
+  if(oauth) oauth.addEventListener('click', function(){
+    if(!state.providers.github){ openGithubToken(); return; }
+    location.href = '/auth/github/start';
+  });
+  if(token) token.addEventListener('click', openGithubToken);
+}
+
+function openGithubToken(){
+  var wrap = document.createElement('div');
+  wrap.id = 'gh-modal';
+  wrap.style.cssText = 'position:fixed;inset:0;z-index:80;background:rgba(8,8,7,.82);display:flex;align-items:center;justify-content:center;padding:20px';
+  wrap.innerHTML = '<div class="card" style="width:100%;max-width:440px">' +
+    '<div class="card-h"><h2>Sign in with a GitHub token</h2><button class="btn sm" id="gh-close">close</button></div>' +
+    '<p class="small muted" style="margin-bottom:12px">Create a personal access token at github.com/settings/tokens (no scopes needed) and paste it here. It is exchanged once for a local session and never stored by the browser.</p>' +
+    '<div class="field"><label for="gh-tok">Personal access token</label><input id="gh-tok" type="password" placeholder="ghp_…" autocomplete="off"/></div>' +
+    '<div id="gh-note"></div>' +
+    '<button class="btn primary wide" id="gh-submit" style="margin-top:12px">Sign in</button>' +
+  '</div>';
+  document.body.appendChild(wrap);
+  var close = function(){ wrap.remove(); };
+  wrap.addEventListener('click', function(ev){ if(ev.target === wrap) close(); });
+  document.getElementById('gh-close').addEventListener('click', close);
+  var input = document.getElementById('gh-tok');
+  input.focus();
+  async function submit(){
+    var note = document.getElementById('gh-note');
+    var value = input.value.trim();
+    if(!value){ note.innerHTML = '<div class="err">Paste a token first.</div>'; return; }
+    document.getElementById('gh-submit').disabled = true;
+    try {
+      var out = await req('/auth/github/token', { method:'POST', body:{ token: value } });
+      close();
+      await boot(true);
+      go('overview');
+      toast('Signed in with GitHub' + (out.user && out.user.email ? ' as ' + out.user.email : ''));
+    } catch(err) {
+      note.innerHTML = '<div class="err">' + esc(err.message) + '</div>';
+    } finally {
+      var b = document.getElementById('gh-submit');
+      if(b) b.disabled = false;
+    }
+  }
+  document.getElementById('gh-submit').addEventListener('click', submit);
+  input.addEventListener('keydown', function(ev){ if(ev.key === 'Enter') submit(); });
+}
+
+// ── overview ───────────────────────────────────────────────
+function viewOverview(){
+  return shell('overview',
+    '<div class="page-h"><h1>Overview</h1><p>Everything running on this machine, at a glance.</p></div>' +
+    '<div class="grid g4" id="ov-svc"><div class="empty">Checking services…</div></div>' +
+    '<div class="grid g2" style="margin-top:14px">' +
+      '<div class="card"><div class="card-h"><h2>Usage</h2><span class="sub">this account</span></div><div id="ov-usage" class="empty">Loading…</div></div>' +
+      '<div class="card"><div class="card-h"><h2>Recent missions</h2><a class="btn sm" href="#/missions">All</a></div><div id="ov-missions" class="empty">Loading…</div></div>' +
+    '</div>' +
+    '<div class="card" style="margin-top:14px"><div class="card-h"><h2>Latest log lines</h2><a class="btn sm" href="#/logs">Logs</a></div><div id="ov-logs" class="empty">Loading…</div></div>'
+  );
+}
+
+async function loadOverview(){
+  req('/status').then(function(d){ state.status = d.services; }).catch(function(){});
+  try {
+    var st = state.status || (await req('/status')).services;
+    var host = document.getElementById('ov-svc');
+    host.innerHTML = st.map(function(s){
+      return '<div class="svc"><span class="dot ' + (s.ok ? 'on' : 'off') + '"></span>' +
+        '<div class="grow"><div class="nm">' + esc(s.name) + '</div><div class="pt">' +
+        (s.ok ? s.ms + 'ms' : 'offline') + '</div></div></div>';
+    }).join('');
+  } catch(e) {
+    document.getElementById('ov-svc').innerHTML = '<div class="card" style="grid-column:1/-1"><div class="err" style="margin:0">' + esc(e.message) + '</div></div>';
+  }
+  try {
+    var me = await api('/v1/me');
+    state.user = me;
+    var u = me.usage || {};
+    document.getElementById('ov-usage').outerHTML =
+      '<div id="ov-usage"><div class="row wrap" style="gap:26px">' +
+        '<div><div class="tiny dim">MESSAGES</div><div class="mono" style="font-size:20px">' + num(u.messages || 0) + '</div></div>' +
+        '<div><div class="tiny dim">TOKENS IN</div><div class="mono" style="font-size:20px">' + num(u.prompt_tokens || 0) + '</div></div>' +
+        '<div><div class="tiny dim">TOKENS OUT</div><div class="mono" style="font-size:20px">' + num(u.completion_tokens || 0) + '</div></div>' +
+        '<div><div class="tiny dim">PLAN</div><div class="mono" style="font-size:20px">' + esc(me.plan || 'free') + '</div></div>' +
+      '</div></div>';
+  } catch(e) {
+    document.getElementById('ov-usage').innerHTML = '<div class="muted small">' + esc(e.message) + '</div>';
+  }
+  try {
+    var m = await api('/v1/missions');
+    var list = m.missions || [];
+    document.getElementById('ov-missions').outerHTML = '<div id="ov-missions" class="list">' +
+      (list.length ? list.slice(0, 5).map(function(x){
+        return '<div class="item" onclick="location.hash=\'#/missions\'"><div class="grow"><div class="t">' + esc(x.title) + '</div>' +
+          '<div class="s">' + esc(x.mode) + ' · ' + ago(x.created_at) + '</div></div>' +
+          '<div class="right">' + statusBadge(x.status) + '</div></div>';
+      }).join('') : '<div class="empty">No missions yet.</div>') + '</div>';
+  } catch(e) {
+    document.getElementById('ov-missions').innerHTML = '<div class="muted small">' + esc(e.message) + '</div>';
+  }
+  try {
+    var l = await svc('lens', '/v1/logs?limit=12');
+    document.getElementById('ov-logs').outerHTML = '<div id="ov-logs">' + logLines(l.lines || []) + '</div>';
+  } catch(e) {
+    document.getElementById('ov-logs').innerHTML = '<div class="muted small">Lens is unreachable.</div>';
+  }
+}
+
+function statusBadge(s){
+  var cls = s === 'done' ? 'on' : (s === 'failed' || s === 'cancelled' ? 'off' : (s === 'awaiting_approval' ? 'warn' : ''));
+  return '<span class="badge ' + cls + '">' + esc(String(s || '').replace(/_/g, ' ')) + '</span>';
+}
+function logLines(lines){
+  if(!lines.length) return '<div class="empty">No log lines yet.</div>';
+  return lines.slice().reverse().map(function(l){
+    var svcName = l.service || l.svc || '—';
+    var msg = l.event || '';
+    var fields = l.fields && Object.keys(l.fields).length ? ' ' + JSON.stringify(l.fields) : '';
+    var t = l.ts || l.t || '';
+    return '<div class="logline"><span class="ts">' + esc(String(t).slice(11, 19)) + '</span>' +
+      '<span class="sv">' + esc(svcName) + '</span>' +
+      '<span class="ms" title="' + esc(msg + fields) + '">' + esc(String(l.level || 'info').toUpperCase()) + ' ' + esc(msg) + esc(fields) + '</span></div>';
+  }).join('');
+}
+
+// ── missions ───────────────────────────────────────────────
+function viewMissions(){
+  return shell('missions',
+    '<div class="page-h"><h1>Missions</h1><p>Describe a job. The orchestrator runs it and asks before anything risky.</p></div>' +
+    '<div class="grid g2">' +
+      '<div class="card"><div class="card-h"><h2>New mission</h2><span class="sub">apex</span></div>' +
+        '<form id="mission-form">' +
+          '<div class="field"><label for="m-title">Title</label><input id="m-title" placeholder="Rate limit the public API" required maxlength="120"/></div>' +
+          '<div class="field"><label for="m-prompt">What should happen</label><textarea id="m-prompt" placeholder="Look at the crawler service and summarise how it guards against SSRF…" required></textarea></div>' +
+          '<div class="row" style="gap:12px">' +
+            '<div class="field grow"><label for="m-mode">Mode</label><select id="m-mode"><option value="chat">chat</option><option value="code">code</option><option value="work">work</option><option value="agent">agent</option></select></div>' +
+            '<div class="field grow"><label for="m-auto">Autonomy</label><select id="m-auto"><option value="restricted">restricted</option><option value="auto">auto</option></select></div>' +
+          '</div>' +
+          '<button class="btn primary wide" type="submit">Create mission</button>' +
+           '<div id="mission-note"></div>' +
+        '</form>' +
+      '</div>' +
+      '<div class="card"><div class="card-h"><h2>All missions</h2><span class="sub" id="m-count"></span></div><div id="m-list" class="list"><div class="empty">Loading…</div></div></div>' +
+    '</div>' +
+    '<div id="mission-detail"></div>'
+  );
+}
+
+async function loadMissions(){
+  try {
+    var data = await api('/v1/missions');
+    var list = data.missions || [];
+    var c = document.getElementById('m-count');
+    if(c) c.textContent = list.length + ' total';
+    var host = document.getElementById('m-list');
+    host.innerHTML = list.length ? list.map(function(m){
+      return '<div class="item" data-mid="' + esc(m.id) + '"><div class="grow"><div class="t">' + esc(m.title) + '</div>' +
+        '<div class="s">' + esc(m.mode) + ' · ' + esc(m.autonomy) + ' · ' + ago(m.created_at) + '</div></div>' +
+        '<div class="right">' + statusBadge(m.status) + '</div></div>';
+    }).join('') : '<div class="empty">No missions yet — create one on the left.</div>';
+    host.querySelectorAll('[data-mid]').forEach(function(el){
+      el.addEventListener('click', function(){ openMission(el.getAttribute('data-mid')); });
+    });
+  } catch(e) {
+    document.getElementById('m-list').innerHTML = '<div class="err">' + esc(e.message) + '</div>';
+  }
+}
+
+function bindMissionForm(){
+  var form = document.getElementById('mission-form');
+  form.addEventListener('submit', async function(ev){
+    ev.preventDefault();
+    var note = document.getElementById('mission-note');
+    note.innerHTML = '';
+    var btn = form.querySelector('button[type=submit]');
+    btn.disabled = true;
+    try {
+      var m = await api('/v1/missions', { method:'POST', body:{
+        title: document.getElementById('m-title').value.trim(),
+        prompt: document.getElementById('m-prompt').value.trim(),
+        mode: document.getElementById('m-mode').value,
+        autonomy: document.getElementById('m-auto').value
+      }});
+      form.reset();
+      toast('Mission queued');
+      await loadMissions();
+      openMission(m.id);
+    } catch(err) {
+      note.innerHTML = '<div class="err">' + esc(err.message) + '</div>';
+    } finally { btn.disabled = false; }
+  });
+}
+
+async function openMission(id){
+  var host = document.getElementById('mission-detail');
+  if(!host) return;
+  host.innerHTML = '<div class="card" style="margin-top:14px"><div class="empty">Loading mission…</div></div>';
+  try {
+    var m = await api('/v1/missions/' + encodeURIComponent(id));
+    host.innerHTML = '<div class="card" style="margin-top:14px">' +
+      '<div class="card-h"><h2>' + esc(m.title) + '</h2>' + statusBadge(m.status) + '</div>' +
+      '<div class="small muted" style="margin-bottom:12px">' + esc(m.mode) + ' · ' + esc(m.autonomy) + ' · created ' + ago(m.created_at) + '</div>' +
+      '<pre style="max-height:120px">' + esc(m.prompt) + '</pre>' +
+      '<div style="margin-top:14px" class="card-h"><h2>Steps</h2><span class="sub">' + ((m.steps || []).length) + '</span></div>' +
+      '<div class="list">' + ((m.steps || []).length ? m.steps.map(function(s){
+        return '<div class="item" style="cursor:default"><div class="grow"><div class="t small">' + esc(s.kind || 'step') + '</div>' +
+          '<div class="s">' + esc(s.detail || '') + '</div></div><div class="right tiny dim">' + esc(String(s.at || '').slice(11,19)) + '</div></div>';
+      }).join('') : '<div class="empty">No steps yet.</div>') + '</div>' +
+      (m.result ? '<div style="margin-top:12px"><div class="tiny dim" style="margin-bottom:6px">RESULT</div><pre>' + esc(m.result) + '</pre></div>' : '') +
+      (m.warning ? '<div class="err">' + esc(m.warning) + '</div>' : '') +
+      '<div class="row wrap" style="margin-top:14px">' +
+        (m.status === 'awaiting_approval' ? '<button class="btn primary" id="m-approve">Approve</button>' : '') +
+        (['queued','running','awaiting_approval'].indexOf(m.status) >= 0 ? '<button class="btn danger" id="m-cancel">Cancel</button>' : '') +
+        '<button class="btn" id="m-refresh">Refresh</button>' +
+      '</div>' +
+    '</div>';
+    var ap = document.getElementById('m-approve');
+    if(ap) ap.addEventListener('click', async function(){
+      try { await api('/v1/missions/' + encodeURIComponent(id) + '/approve', { method:'POST', body:{} }); toast('Approved'); openMission(id); }
+      catch(e){ toast(e.message, 'err'); }
+    });
+    var ca = document.getElementById('m-cancel');
+    if(ca) ca.addEventListener('click', async function(){
+      try { await api('/v1/missions/' + encodeURIComponent(id) + '/cancel', { method:'POST', body:{} }); toast('Cancelled'); openMission(id); loadMissions(); }
+      catch(e){ toast(e.message, 'err'); }
+    });
+    document.getElementById('m-refresh').addEventListener('click', function(){ openMission(id); });
+  } catch(e) {
+    host.innerHTML = '<div class="card" style="margin-top:14px"><div class="err">' + esc(e.message) + '</div></div>';
+  }
+}
+
+// ── chat ───────────────────────────────────────────────────
+function viewChat(){
+  return shell('chat',
+    '<div class="page-h"><h1>Chat</h1><p>One thread, any connected model.</p></div>' +
+    '<div class="card">' +
+      '<div class="card-h"><h2>Conversation</h2>' +
+        '<select id="chat-model" style="width:auto;min-width:200px"><option value="">default model</option></select>' +
+      '</div>' +
+      '<div class="thread" id="chat-thread"><div class="empty">Say something. Model routing goes through the router service.</div></div>' +
+      '<div class="composer">' +
+        '<textarea id="chat-input" placeholder="Ask anything… (Enter to send, Shift+Enter for a new line)"></textarea>' +
+        '<button class="btn primary" id="chat-send">Send</button>' +
+      '</div>' +
+      '<div id="chat-note"></div>' +
+    '</div>'
+  );
+}
+
+async function loadChat(){
+  try {
+    var m = await api('/v1/models');
+    var sel = document.getElementById('chat-model');
+    (m.models || []).forEach(function(x){
+      var o = document.createElement('option');
+      o.value = x.id;
+      o.textContent = x.id + (x.provider ? ' · ' + x.provider : '');
+      sel.appendChild(o);
+    });
+    if(!(m.models || []).length){
+      var o = document.createElement('option');
+      o.value = ''; o.textContent = 'no providers configured';
+      sel.appendChild(o);
+    }
+  } catch(e) {}
+  renderThread();
+  var input = document.getElementById('chat-input');
+  input.addEventListener('keydown', function(ev){
+    if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); sendChat(); }
+  });
+  document.getElementById('chat-send').addEventListener('click', sendChat);
+}
+
+function renderThread(){
+  var host = document.getElementById('chat-thread');
+  if(!host) return;
+  host.innerHTML = state.chat.length ? state.chat.map(function(m){
+    return '<div class="msg ' + m.role + '"><span class="who2">' + (m.role === 'user' ? 'you' : 'agent') + '</span>' + esc(m.content) + '</div>';
+  }).join('') : '<div class="empty">Say something. Model routing goes through the router service.</div>';
+  host.scrollTop = host.scrollHeight;
+}
+
+async function sendChat(){
+  var input = document.getElementById('chat-input');
+  var note = document.getElementById('chat-note');
+  var text = input.value.trim();
+  if(!text) return;
+  note.innerHTML = '';
+  input.value = '';
+  state.chat.push({ role:'user', content:text });
+  renderThread();
+  var btn = document.getElementById('chat-send');
+  btn.disabled = true;
+  state.chat.push({ role:'agent', content:'…' });
+  renderThread();
+  try {
+    var model = document.getElementById('chat-model').value;
+    var body = { messages: state.chat.filter(function(m){ return m.content !== '…'; }).map(function(m){
+      return { role: m.role === 'agent' ? 'assistant' : 'user', content: m.content };
+    }) };
+    if(model) body.model = model;
+    var out = await api('/v1/chat', { method:'POST', body: body });
+    var reply = out && out.choices && out.choices[0] && out.choices[0].message
+      ? out.choices[0].message.content
+      : (out && out.content) || JSON.stringify(out);
+    state.chat[state.chat.length - 1] = { role:'agent', content: reply };
+    renderThread();
+  } catch(e) {
+    state.chat[state.chat.length - 1] = { role:'err', content: e.message };
+    renderThread();
+  } finally { btn.disabled = false; }
+}
+
+// ── services ───────────────────────────────────────────────
+function viewServices(){
+  return shell('services',
+    '<div class="page-h"><h1>Services</h1><p>Eight processes, one platform. Each one talks HTTP.</p></div>' +
+    '<div class="grid g4" id="svc-grid"><div class="empty">Checking…</div></div>' +
+    '<div class="card" style="margin-top:14px"><div class="card-h"><h2 id="svc-detail-h">Pick a service</h2><span class="sub" id="svc-detail-sub"></span></div>' +
+      '<div id="svc-detail" class="empty">Choose a tile above to see its health and recent logs.</div></div>'
+  );
+}
+
+async function loadServices(){
+  var grid = document.getElementById('svc-grid');
+  try {
+    var st = (await req('/status')).services;
+    grid.innerHTML = st.map(function(s){
+      return '<button class="svc" data-svc="' + esc(s.name) + '" style="text-align:left;cursor:pointer">' +
+        '<span class="dot ' + (s.ok ? 'on' : 'off') + '"></span><div class="grow"><div class="nm">' + esc(s.name) + '</div>' +
+        '<div class="pt">' + (s.ok ? s.ms + 'ms' : 'offline') + '</div></div></button>';
+    }).join('');
+    grid.querySelectorAll('[data-svc]').forEach(function(el){
+      el.addEventListener('click', function(){ showService(el.getAttribute('data-svc')); });
+    });
+  } catch(e) {
+    grid.innerHTML = '<div class="card" style="grid-column:1/-1"><div class="err" style="margin:0">' + esc(e.message) + '</div></div>';
+  }
+}
+
+async function showService(name){
+  var head = document.getElementById('svc-detail-h');
+  var sub = document.getElementById('svc-detail-sub');
+  var host = document.getElementById('svc-detail');
+  head.textContent = name;
+  sub.textContent = 'loading…';
+  host.className = '';
+  host.innerHTML = '<div class="empty">Loading…</div>';
+  try {
+    var h = await req('/svc/' + name + '/healthz');
+    sub.innerHTML = '<span class="badge on">up ' + esc(h.version || '') + '</span>';
+    var logs = { lines: [] };
+    try { logs = await svc('lens', '/v1/logs?service=' + encodeURIComponent(name) + '&limit=25'); } catch(e) {}
+    host.className = '';
+    host.innerHTML =
+      '<div class="grid g4" style="margin-bottom:14px">' +
+        '<div class="stat card" style="margin:0"><div class="k">status</div><div class="v" style="font-size:14px">ok</div></div>' +
+        '<div class="stat card" style="margin:0"><div class="k">version</div><div class="v" style="font-size:14px">' + esc(h.version || '—') + '</div></div>' +
+        '<div class="stat card" style="margin:0"><div class="k">uptime</div><div class="v" style="font-size:14px">' + num(h.uptime_s || 0) + 's</div></div>' +
+        '<div class="stat card" style="margin:0"><div class="k">logs</div><div class="v" style="font-size:14px">' + (logs.lines || []).length + '</div></div>' +
+      '</div>' +
+      '<div class="tiny dim" style="margin:6px 0">RECENT LOGS</div>' +
+      logLines(logs.lines || []);
+  } catch(e) {
+    sub.innerHTML = '<span class="badge off">down</span>';
+    host.innerHTML = '<div class="err">' + esc(e.message) + '</div>';
+  }
+}
+
+// ── vault / search ─────────────────────────────────────────
+function viewVault(){
+  return shell('vault',
+    '<div class="page-h"><h1>Search</h1><p>Hybrid retrieval over your own documents and notes.</p></div>' +
+    '<div class="card">' +
+      '<div class="card-h"><h2>Query</h2><span class="sub">vault</span></div>' +
+      '<div class="row"><input id="v-q" placeholder="e.g. how does the crawler block private addresses"/><button class="btn primary" id="v-go">Search</button></div>' +
+      '<div id="v-note"></div>' +
+      '<div id="v-results" style="margin-top:14px"></div>' +
+    '</div>' +
+    '<div class="grid g2" style="margin-top:14px">' +
+      '<div class="card"><div class="card-h"><h2>Collections</h2><span class="sub" id="v-count"></span></div><div id="v-collections" class="list"><div class="empty">Loading…</div></div></div>' +
+      '<div class="card"><div class="card-h"><h2>Add a document</h2></div>' +
+        '<form id="v-form">' +
+          '<div class="field"><label for="v-collection">Collection</label><input id="v-collection" placeholder="notes" value="notes"/></div>' +
+          '<div class="field"><label for="v-text">Text</label><textarea id="v-text" placeholder="Paste anything worth remembering…" required></textarea></div>' +
+          '<button class="btn primary wide" type="submit">Store in vault</button>' +
+          '<div id="v-add-note"></div>' +
+        '</form>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
+async function loadVault(){
+  var goBtn = document.getElementById('v-go');
+  goBtn.addEventListener('click', runSearch);
+  document.getElementById('v-q').addEventListener('keydown', function(ev){ if(ev.key === 'Enter') runSearch(); });
+  document.getElementById('v-form').addEventListener('submit', async function(ev){
+    ev.preventDefault();
+    var note = document.getElementById('v-add-note');
+    note.innerHTML = '';
+    try {
+      await svc('vault', '/v1/documents', { method:'POST', body:{ collection: document.getElementById('v-collection').value.trim() || 'notes', text: document.getElementById('v-text').value.trim() } });
+      document.getElementById('v-text').value = '';
+      note.innerHTML = '<div class="ok">Stored.</div>';
+      loadCollections();
+    } catch(e) {
+      note.innerHTML = '<div class="err">' + esc(e.message) + '</div>';
+    }
+  });
+  loadCollections();
+}
+
+async function runSearch(){
+  var q = document.getElementById('v-q').value.trim();
+  var host = document.getElementById('v-results');
+  var note = document.getElementById('v-note');
+  note.innerHTML = '';
+  if(!q){ host.innerHTML = '<div class="empty">Type something to search.</div>'; return; }
+  host.innerHTML = '<div class="empty">Searching…</div>';
+  try {
+    var out = await svc('vault', '/v1/search', { method:'POST', body:{ query: q, limit: 10 } });
+    var results = out.results || [];
+    host.innerHTML = results.length ? results.map(function(r){
+      return '<div class="item" style="cursor:default;align-items:flex-start"><div class="grow"><div class="s" style="color:var(--text3)">' + esc(r.collection || '') + ' · score ' + (Math.round((r.score || 0) * 1000) / 1000) + '</div>' +
+        '<div class="small" style="color:var(--text2);margin-top:3px">' + esc(r.text) + '</div></div></div>';
+    }).join('') : '<div class="empty">No matches.</div>';
+  } catch(e) {
+    host.innerHTML = '<div class="err">' + esc(e.message) + '</div>';
+  }
+}
+
+async function loadCollections(){
+  var host = document.getElementById('v-collections');
+  try {
+    var out = await svc('vault', '/v1/collections');
+    var list = out.collections || [];
+    var c = document.getElementById('v-count');
+    if(c) c.textContent = list.length + ' collections';
+    host.innerHTML = list.length ? list.map(function(c2){
+      return '<div class="item" style="cursor:default"><div class="grow"><div class="t">' + esc(c2.name) + '</div>' +
+        '<div class="s">' + num(c2.documents || 0) + ' documents</div></div></div>';
+    }).join('') : '<div class="empty">No collections yet.</div>';
+  } catch(e) {
+    host.innerHTML = '<div class="err">' + esc(e.message) + '</div>';
+  }
+}
+
+// ── secrets ────────────────────────────────────────────────
+function viewSecrets(){
+  return shell('secrets',
+    '<div class="page-h"><h1>Secrets</h1><p>Encrypted at rest with AES-256-GCM. Values are written once and never shown again.</p></div>' +
+    '<div class="grid g2">' +
+      '<div class="card"><div class="card-h"><h2>Stored secrets</h2><span class="sub" id="s-count"></span></div><div id="s-list" class="list"><div class="empty">Loading…</div></div></div>' +
+      '<div class="card"><div class="card-h"><h2>Add a secret</h2></div>' +
+        '<form id="s-form">' +
+          '<div class="field"><label for="s-name">Name</label><input id="s-name" placeholder="OPENAI_API_KEY" required pattern="[A-Za-z0-9_.\\-:]+"/></div>' +
+          '<div class="field"><label for="s-value">Value</label><input id="s-value" type="password" placeholder="sk-…" required autocomplete="off"/></div>' +
+          '<button class="btn primary wide" type="submit">Store secret</button>' +
+          '<div id="s-note"></div>' +
+        '</form>' +
+      '</div>' +
+    '</div>' +
+    '<div class="card" style="margin-top:14px"><div class="card-h"><h2>Redaction check</h2><span class="sub">keychain</span></div>' +
+      '<div class="row"><input id="r-text" placeholder="Paste text that might contain a secret…"/><button class="btn" id="r-go">Redact</button></div>' +
+      '<div id="r-out" style="margin-top:12px"></div></div>'
+  );
+}
+
+async function loadSecrets(){
+  document.getElementById('s-form').addEventListener('submit', async function(ev){
+    ev.preventDefault();
+    var note = document.getElementById('s-note');
+    note.innerHTML = '';
+    try {
+      await svc('keychain', '/v1/secrets', { method:'POST', body:{ name: document.getElementById('s-name').value.trim(), value: document.getElementById('s-value').value } });
+      document.getElementById('s-value').value = '';
+      note.innerHTML = '<div class="ok">Stored.</div>';
+      loadSecretList();
+    } catch(e) { note.innerHTML = '<div class="err">' + esc(e.message) + '</div>'; }
+  });
+  document.getElementById('r-go').addEventListener('click', async function(){
+    var out = document.getElementById('r-out');
+    try {
+      var r = await svc('keychain', '/v1/redact', { method:'POST', body:{ text: document.getElementById('r-text').value } });
+      out.innerHTML = '<pre>' + esc(r.text) + '</pre>';
+    } catch(e) { out.innerHTML = '<div class="err">' + esc(e.message) + '</div>'; }
+  });
+  loadSecretList();
+}
+
+async function loadSecretList(){
+  var host = document.getElementById('s-list');
+  try {
+    var out = await svc('keychain', '/v1/secrets');
+    var list = out.secrets || [];
+    var c = document.getElementById('s-count');
+    if(c) c.textContent = list.length + ' stored';
+    host.innerHTML = list.length ? list.map(function(s){
+      return '<div class="item" style="cursor:default"><div class="grow"><div class="t mono" style="font-size:12px">' + esc(s.name) + '</div>' +
+        '<div class="s">' + (s.meta && s.meta.provider ? esc(s.meta.provider) + ' · ' : '') + 'updated ' + ago(s.updated_at || s.created_at) + '</div></div>' +
+        '<div class="right row"><button class="btn sm" data-rot="' + esc(s.name) + '">rotate</button>' +
+        '<button class="btn sm danger" data-del="' + esc(s.name) + '">delete</button></div></div>';
+    }).join('') : '<div class="empty">No secrets stored.</div>';
+    host.querySelectorAll('[data-rot]').forEach(function(b){
+      b.addEventListener('click', async function(){
+        var name = b.getAttribute('data-rot');
+        var value = prompt('New value for ' + name);
+        if(!value) return;
+        try { await svc('keychain', '/v1/secrets/' + encodeURIComponent(name) + '/rotate', { method:'POST', body:{ value: value } }); toast('Rotated ' + name); loadSecretList(); }
+        catch(e){ toast(e.message, 'err'); }
+      });
+    });
+    host.querySelectorAll('[data-del]').forEach(function(b){
+      b.addEventListener('click', async function(){
+        var name = b.getAttribute('data-del');
+        if(!confirm('Delete ' + name + '?')) return;
+        try { await svc('keychain', '/v1/secrets/' + encodeURIComponent(name), { method:'DELETE' }); toast('Deleted ' + name); loadSecretList(); }
+        catch(e){ toast(e.message, 'err'); }
+      });
+    });
+  } catch(e) {
+    host.innerHTML = '<div class="err">' + esc(e.message) + '</div>';
+  }
+}
+
+// ── logs ───────────────────────────────────────────────────
+function viewLogs(){
+  return shell('logs',
+    '<div class="page-h"><h1>Logs</h1><p>Everything every service reports, straight from lens.</p></div>' +
+    '<div class="card">' +
+      '<div class="card-h"><h2>Filter</h2><span class="sub" id="l-count"></span></div>' +
+      '<div class="row wrap" style="gap:10px">' +
+        '<select id="l-service" style="width:auto"><option value="">all services</option></select>' +
+        '<select id="l-level" style="width:auto"><option value="">all levels</option><option value="info">info</option><option value="warn">warn</option><option value="error">error</option></select>' +
+        '<input id="l-q" placeholder="search text" style="flex:1;min-width:160px"/>' +
+        '<button class="btn" id="l-go">Apply</button>' +
+        '<button class="btn" id="l-auto">auto: off</button>' +
+      '</div>' +
+      '<div id="l-out" style="margin-top:14px"><div class="empty">Loading…</div></div>' +
+    '</div>'
+  );
+}
+
+var logTimer = null;
+
+async function loadLogs(){
+  var sel = document.getElementById('l-service');
+  ['apex','keychain','lens','vault','router','forge','crawler','panel'].forEach(function(n){
+    var o = document.createElement('option'); o.value = n; o.textContent = n; sel.appendChild(o);
+  });
+  document.getElementById('l-go').addEventListener('click', loadLogLines);
+  var auto = document.getElementById('l-auto');
+  auto.addEventListener('click', function(){
+    if(logTimer){ clearInterval(logTimer); logTimer = null; auto.textContent = 'auto: off'; auto.classList.remove('primary'); }
+    else { logTimer = setInterval(loadLogLines, 5000); auto.textContent = 'auto: on'; auto.classList.add('primary'); }
+  });
+  document.getElementById('l-q').addEventListener('keydown', function(ev){ if(ev.key === 'Enter') loadLogLines(); });
+  loadLogLines();
+}
+
+async function loadLogLines(){
+  var out = document.getElementById('l-out');
+  var q = '/v1/logs?limit=200';
+  var svcName = document.getElementById('l-service').value;
+  var level = document.getElementById('l-level').value;
+  var text = document.getElementById('l-q').value.trim();
+  if(svcName) q += '&service=' + encodeURIComponent(svcName);
+  if(level) q += '&level=' + encodeURIComponent(level);
+  if(text) q += '&q=' + encodeURIComponent(text);
+  try {
+    var data = await svc('lens', q);
+    var c = document.getElementById('l-count');
+    if(c) c.textContent = (data.total || (data.lines || []).length) + ' lines';
+    out.innerHTML = logLines(data.lines || []);
+  } catch(e) {
+    out.innerHTML = '<div class="err">' + esc(e.message) + '</div>';
+  }
+}
+
+// ── account ────────────────────────────────────────────────
+function viewAccount(){
+  var u = state.user || {};
+  var gh = u.github;
+  return shell('account',
+    '<div class="page-h"><h1>Account</h1><p>Your local profile and the connections behind it.</p></div>' +
+    '<div class="grid g2">' +
+      '<div class="card"><div class="card-h"><h2>Profile</h2><span class="sub">' + esc(u.plan || 'free') + '</span></div>' +
+        '<div class="field"><label>Email</label><div class="mono small">' + esc(u.email || '—') + '</div></div>' +
+        '<div class="field"><label>User id</label><div class="mono small dim">' + esc(u.user_id || '—') + '</div></div>' +
+        '<div class="field"><label>Created</label><div class="mono small dim">' + esc(u.created_at || '—') + '</div></div>' +
+        '<button class="btn danger" id="sign-out">Sign out</button>' +
+      '</div>' +
+      '<div class="card"><div class="card-h"><h2>GitHub</h2>' + (gh ? '<span class="badge on">connected</span>' : '<span class="badge">not connected</span>') + '</div>' +
+        (gh
+          ? '<div class="row" style="gap:12px"><div class="avatar" style="width:40px;height:40px">' + (gh.avatar_url ? '<img alt="" src="' + esc(gh.avatar_url) + '"/>' : esc(gh.login[0].toUpperCase())) + '</div>' +
+            '<div><div class="mono small">' + esc(gh.login) + '</div><div class="s dim">' + esc(gh.name || '') + '</div></div></div>' +
+            '<p class="small muted" style="margin-top:12px">Signing in with GitHub uses your account identity only. Repo access needs a token with the scopes you choose.</p>'
+          : '<p class="small muted">Link GitHub to sign in with one click. OAuth needs GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET in the panel environment; a personal access token works right away.</p>' +
+            '<button class="gh" id="acc-gh">' + ghIcon() + ' Connect GitHub</button>') +
+      '</div>' +
+    '</div>' +
+    '<div class="card" style="margin-top:14px"><div class="card-h"><h2>Runtime</h2><span class="sub">this browser session</span></div>' +
+      '<div class="grid g4">' +
+        '<div class="stat card" style="margin:0"><div class="k">API</div><div class="v" style="font-size:13px">apex</div><div class="tiny dim">proxy /api</div></div>' +
+        '<div class="stat card" style="margin:0"><div class="k">Session</div><div class="v" style="font-size:13px">cookie</div><div class="tiny dim">httpOnly</div></div>' +
+        '<div class="stat card" style="margin:0"><div class="k">OAuth</div><div class="v" style="font-size:13px">' + (state.providers.github ? 'ready' : 'off') + '</div><div class="tiny dim">GITHUB_CLIENT_ID</div></div>' +
+        '<div class="stat card" style="margin:0"><div class="k">Services</div><div class="v" style="font-size:13px">' + ((state.status || []).filter(function(s){ return s.ok; }).length) + '/8</div><div class="tiny dim">online</div></div>' +
+      '</div>' +
+      '<div class="row wrap" style="margin-top:14px">' +
+        '<button class="btn" id="acc-panic">Panic stop</button>' +
+        '<button class="btn" id="acc-refresh">Refresh health</button>' +
+      '</div>' +
+      '<div id="acc-note"></div>' +
+    '</div>'
+  );
+}
+
+function bindAccount(){
+  var out = document.getElementById('sign-out');
+  if(out) out.addEventListener('click', async function(){
+    try { await req('/auth/logout', { method:'POST' }); } catch(e) {}
+    state.user = null;
+    location.hash = '#/signin';
+    toast('Signed out');
+  });
+  var ghb = document.getElementById('acc-gh');
+  if(ghb) ghb.addEventListener('click', function(){
+    if(state.providers.github) location.href = '/auth/github/start';
+    else openGithubToken();
+  });
+  var pan = document.getElementById('acc-panic');
+  if(pan) pan.addEventListener('click', async function(){
+    if(!confirm('Stop everything and clear all sandboxes?')) return;
+    try { var r = await api('/v1/panic', { method:'POST', body:{} }); toast('Panic done — ' + (r.sandboxes_removed || 0) + ' sandboxes removed'); }
+    catch(e){ toast(e.message, 'err'); }
+  });
+  var rf = document.getElementById('acc-refresh');
+  if(rf) rf.addEventListener('click', async function(){
+    try { state.status = (await req('/status')).services; toast('Health refreshed'); render(); }
+    catch(e){ toast(e.message, 'err'); }
+  });
+}
+
+// ── render ─────────────────────────────────────────────────
+var VIEWS = {
+  overview: { view: viewOverview, load: loadOverview },
+  missions: { view: viewMissions, load: function(){ bindMissionForm(); loadMissions(); } },
+  chat: { view: viewChat, load: loadChat },
+  services: { view: viewServices, load: loadServices },
+  vault: { view: viewVault, load: loadVault },
+  secrets: { view: viewSecrets, load: loadSecrets },
+  logs: { view: viewLogs, load: loadLogs },
+  account: { view: viewAccount, load: function(){ bindAccount(); } }
+};
+
+function render(){
+  var parsed = parseHash();
+  var route = parsed.route;
+
+  if(PUBLIC.indexOf(route) >= 0){
+    app.innerHTML = route === 'landing' ? viewLanding() : viewAuth(route, parsed.query);
+    if(route === 'landing') loadLandingStatus();
+    else { doAuth(route); bindAuthButtons(); }
+    return;
+  }
+
+  if(!state.user){ location.hash = '#/signin'; return; }
+  var v = VIEWS[route] || VIEWS.overview;
+  app.innerHTML = v.view();
+  try { v.load(); } catch(e) { console.warn(e); }
+}
+
+async function boot(force){
+  try {
+    var p = await req('/auth/providers');
+    state.providers = p;
+  } catch(e) {}
+  try {
+    var s = await req('/auth/session');
+    state.user = s.user;
+  } catch(e) {
+    state.user = null;
+  }
+  if(force) render();
+}
+
+window.addEventListener('hashchange', render);
+// Wait for the session before the first paint. Rendering first meant state.user was
+// still null, so every reload bounced an already-signed-in user to #/signin.
+boot().then(function(){
+  render();
+});
+})();
+</script>
+</body>
+</html>

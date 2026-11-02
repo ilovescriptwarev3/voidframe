@@ -1,0 +1,6 @@
+.env
+node_modules/
+services/*/data/
+*.log
+.DS_Store
+*.err
